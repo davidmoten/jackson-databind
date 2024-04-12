@@ -358,7 +358,7 @@ public class StdValueInstantiator
     public Object createFromInt(DeserializationContext ctxt, int value) throws IOException
     {
         // start with exact match on the creator type
-        // then continue widening the type match
+        // then continue widening the type match. 
 
         if (_fromIntCreator != null) {
             return instantiate(ctxt, _fromIntCreator, value);
@@ -374,14 +374,15 @@ public class StdValueInstantiator
             return instantiate(ctxt, _fromBigIntegerCreator, arg);
         }
         
+        if (_fromDoubleCreator != null) {
+            // note will not lose precision
+            Double arg = Double.valueOf(value);
+            return instantiate(ctxt, _fromDoubleCreator, arg);
+        }
+        
         if (_fromBigDecimalCreator != null) {
             BigDecimal arg = BigDecimal.valueOf(value);
             return instantiate(ctxt, _fromBigDecimalCreator, arg);
-        }
-        
-        if (_fromDoubleCreator != null) {
-            Double arg = Double.valueOf(value);
-            return instantiate(ctxt, _fromDoubleCreator, arg);
         }
 
         // may lose precision
