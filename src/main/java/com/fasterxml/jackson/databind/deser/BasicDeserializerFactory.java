@@ -1126,6 +1126,12 @@ candidate.creator());
             }
             return true;
         }
+        if (type == float.class || type == Float.class) {
+            if (isCreator || isVisible) {
+                creators.addFloatCreator(ctor, isCreator);
+            }
+            return true;
+        }
         if (type == boolean.class || type == Boolean.class) {
             if (isCreator || isVisible) {
                 creators.addBooleanCreator(ctor, isCreator);

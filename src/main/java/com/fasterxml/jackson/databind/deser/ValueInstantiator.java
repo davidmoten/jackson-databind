@@ -146,11 +146,18 @@ public abstract class ValueInstantiator
     public boolean canCreateFromBigInteger() { return false; }
 
     /**
+     * Method that can be called to check whether a float (float / Float) based
+     * creator is available to use (to call {@link #createFromFloat}).
+     */
+    public boolean canCreateFromFloat() { return false; }
+
+    /**
      * Method that can be called to check whether a double (double / Double) based
      * creator is available to use (to call {@link #createFromDouble}).
      */
     public boolean canCreateFromDouble() { return false; }
 
+    
     /**
      * Method that can be called to check whether a BigDecimal based creator is available
      * to use (to call {@link #createFromBigDecimal}).

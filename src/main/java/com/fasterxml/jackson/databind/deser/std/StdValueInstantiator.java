@@ -22,6 +22,11 @@ public class StdValueInstantiator
     implements java.io.Serializable
 {
     private static final long serialVersionUID = 1L;
+    
+    private static final BigInteger BIG_INTEGER_MAX_INT = BigInteger.valueOf(Integer.MAX_VALUE);
+    private static final BigInteger BIG_INTEGER_MIN_INT = BigInteger.valueOf(Integer.MIN_VALUE);
+    private static final BigInteger BIG_INTEGER_MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger BIG_INTEGER_MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
 
     /**
      * Type of values that are instantiated; used
@@ -66,6 +71,7 @@ public class StdValueInstantiator
     protected AnnotatedWithParams _fromLongCreator;
     protected AnnotatedWithParams _fromBigIntegerCreator;
     protected AnnotatedWithParams _fromDoubleCreator;
+    protected AnnotatedWithParams _fromFloatCreator;
     protected AnnotatedWithParams _fromBigDecimalCreator;
     protected AnnotatedWithParams _fromBooleanCreator;
 
@@ -163,6 +169,10 @@ public class StdValueInstantiator
 
     public void configureFromDoubleCreator(AnnotatedWithParams creator) {
         _fromDoubleCreator = creator;
+    }
+    
+    public void configureFromFloatCreator(AnnotatedWithParams creator) {
+        _fromFloatCreator = creator;
     }
 
     public void configureFromBigDecimalCreator(AnnotatedWithParams creator) { _fromBigDecimalCreator = creator; }
@@ -339,12 +349,7 @@ public class StdValueInstantiator
     public Object createFromString(DeserializationContext ctxt, String value) throws IOException
     {
         if (_fromStringCreator != null) {
-            try {
-                return _fromStringCreator.call1(value);
-            } catch (Exception t) {
-                return ctxt.handleInstantiationProblem(_fromStringCreator.getDeclaringClass(),
-                        value, rewrapCtorProblem(ctxt, t));
-            }
+            return instantiate(ctxt, _fromStringCreator, value);
         }
         return super.createFromString(ctxt, value);
     }
@@ -354,86 +359,64 @@ public class StdValueInstantiator
     {
         // First: "native" int methods work best:
         if (_fromIntCreator != null) {
-            Object arg = Integer.valueOf(value);
-            try {
-                return _fromIntCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromIntCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0));
-            }
+            return instantiate(ctxt, _fromIntCreator, value);
         }
         // but if not, can do widening conversion
         if (_fromLongCreator != null) {
-            Object arg = Long.valueOf(value);
-            try {
-                return _fromLongCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromLongCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0));
-            }
+            Long arg = Long.valueOf(value);
+            return instantiate(ctxt, _fromLongCreator, arg);
         }
 
         if (_fromBigIntegerCreator != null) {
-            Object arg = BigInteger.valueOf(value);
-            try {
-                return _fromBigIntegerCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromBigIntegerCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0)
-                );
-            }
+            BigInteger arg = BigInteger.valueOf(value);
+            return instantiate(ctxt, _fromBigIntegerCreator, arg);
+        }
+        
+        if (_fromBigDecimalCreator != null) {
+            BigDecimal arg = BigDecimal.valueOf(value);
+            return instantiate(ctxt, _fromBigDecimalCreator, arg);
         }
         
         if (_fromDoubleCreator != null) {
-            Object arg = Double.valueOf(value);
-            try {
-                return _fromDoubleCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromDoubleCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0)
-                );
-            }
+            Double arg = Double.valueOf(value);
+            return instantiate(ctxt, _fromDoubleCreator, arg);
+        }
+
+        // may lose precision
+        
+        if (_fromFloatCreator != null) {
+            Float arg = Float.valueOf(value);
+            return instantiate(ctxt, _fromFloatCreator, arg);
         }
         
         return super.createFromInt(ctxt, value);
     }
+
+    
 
     @Override
     public Object createFromLong(DeserializationContext ctxt, long value) throws IOException
     {
         if (_fromLongCreator != null) {
             Long arg = Long.valueOf(value);
-            try {
-                return _fromLongCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromLongCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0)
-                );
-            }
+            return instantiate(ctxt, _fromLongCreator, arg);
         }
 
         if (_fromBigIntegerCreator != null) {
             BigInteger arg = BigInteger.valueOf(value);
-            try {
-                return _fromBigIntegerCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromBigIntegerCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0)
-                );
-            }
+            return instantiate(ctxt, _fromBigIntegerCreator, arg);
         }
         
-        // [databind#4453]: Note: can lose precision (since double is 64-bits of which
-        // only part is for mantissa). But already the case with regular properties.
+        // may lose precision
+        
         if (_fromDoubleCreator != null) {
-            Object arg = Double.valueOf(value);
-            try {
-                return _fromDoubleCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromDoubleCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0)
-                );
-            }
+            Double arg = Double.valueOf(value);
+            return instantiate(ctxt, _fromDoubleCreator, arg);
+        }
+        
+        if (_fromFloatCreator != null) {
+            Float arg = Float.valueOf(value);
+            return instantiate(ctxt, _fromFloatCreator, arg);
         }
 
         return super.createFromLong(ctxt, value);
@@ -443,15 +426,44 @@ public class StdValueInstantiator
     public Object createFromBigInteger(DeserializationContext ctxt, BigInteger value) throws IOException
     {
         if (_fromBigIntegerCreator != null) {
-            try {
-                return _fromBigIntegerCreator.call1(value);
-            } catch (Exception t) {
-                return ctxt.handleInstantiationProblem(_fromBigIntegerCreator.getDeclaringClass(),
-                        value, rewrapCtorProblem(ctxt, t)
-                );
+            return instantiate(ctxt, _fromBigIntegerCreator, value);
+        }
+        
+        if (_fromBigDecimalCreator != null) {
+            BigDecimal arg = new BigDecimal(value.toString());
+            return instantiate(ctxt, _fromBigDecimalCreator, arg);
+        }
+        
+        if (_fromIntCreator != null) {
+            if (value.compareTo(BIG_INTEGER_MAX_INT) <= 0 && value.compareTo(BIG_INTEGER_MIN_INT) >= 0) {
+                Integer arg = value.intValue();
+                return instantiate(ctxt, _fromIntCreator, arg);
             }
         }
+        
+        if (_fromLongCreator != null) {
+            if (value.compareTo(BIG_INTEGER_MAX_LONG) <= 0 && value.compareTo(BIG_INTEGER_MIN_LONG) >= 0) {
+                long arg = value.longValue();
+                return instantiate(ctxt, _fromLongCreator, arg);
+            }
+        }
+        
+        // may lose precision
 
+        if (_fromDoubleCreator != null) {
+            double arg = value.doubleValue();
+            if (Double.isFinite(arg)) {
+                return instantiate(ctxt, _fromDoubleCreator, arg);
+            }
+        }
+        
+        if (_fromFloatCreator != null) {
+            float arg = value.floatValue();
+            if (Float.isFinite(arg)) {
+                return instantiate(ctxt, _fromFloatCreator, arg);
+            }
+        }
+        
         return super.createFromBigInteger(ctxt, value);
     }
 
@@ -460,21 +472,20 @@ public class StdValueInstantiator
     {
         if(_fromDoubleCreator != null) {
             Double arg = Double.valueOf(value);
-            try {
-                return _fromDoubleCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromDoubleCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0));
-            }
+            return instantiate(ctxt, _fromDoubleCreator, arg);
         }
 
         if (_fromBigDecimalCreator != null) {
             BigDecimal arg = BigDecimal.valueOf(value);
-            try {
-                return _fromBigDecimalCreator.call1(arg);
-            } catch (Exception t0) {
-                return ctxt.handleInstantiationProblem(_fromBigDecimalCreator.getDeclaringClass(),
-                        arg, rewrapCtorProblem(ctxt, t0));
+            return instantiate(ctxt, _fromLongCreator, arg);
+        }
+        
+        // may lose precision
+        
+        if(_fromFloatCreator != null) {
+            float arg = ((Double) value).floatValue();
+            if (Float.isFinite(arg)) {
+                return instantiate(ctxt, _fromFloatCreator, arg);
             }
         }
 
@@ -485,41 +496,26 @@ public class StdValueInstantiator
     public Object createFromBigDecimal(DeserializationContext ctxt, BigDecimal value) throws IOException
     {
         if (_fromBigDecimalCreator != null) {
-            try {
-                return _fromBigDecimalCreator.call1(value);
-            } catch (Exception t) {
-                return ctxt.handleInstantiationProblem(_fromBigDecimalCreator.getDeclaringClass(),
-                        value, rewrapCtorProblem(ctxt, t)
-                );
-            }
+            return instantiate(ctxt, _fromBigDecimalCreator, value);
         }
 
-        // 13-Dec-2020, ckozak: Unlike other types, BigDecimal values may be represented
-        // with less precision as doubles. When written to a TokenBuffer for polymorphic
-        // deserialization the most specific type is recorded, though a less precise
-        // floating point value may be needed.
+        // may lose precision 
+        
         if (_fromDoubleCreator != null) {
-            Double dbl = tryConvertToDouble(value);
-            if (dbl != null) {
-                try {
-                    return _fromDoubleCreator.call1(dbl);
-                } catch (Exception t0) {
-                    return ctxt.handleInstantiationProblem(_fromDoubleCreator.getDeclaringClass(),
-                            dbl, rewrapCtorProblem(ctxt, t0));
-                }
+            double arg = value.doubleValue();
+            if (Double.isFinite(arg)) {
+                return instantiate(ctxt, _fromDoubleCreator, arg);
+            }
+        }
+        
+        if(_fromFloatCreator != null) {
+            Float arg =  value.floatValue();
+            if (Float.isFinite(arg)) {
+                return instantiate(ctxt, _fromFloatCreator, arg);
             }
         }
 
         return super.createFromBigDecimal(ctxt, value);
-    }
-
-    // BigDecimal cannot represent special values NaN, positive infinity, or negative infinity.
-    // When the value cannot be represented as a double, positive or negative infinity is returned.
-    //
-    // @since 2.12.1
-    static Double tryConvertToDouble(BigDecimal value) {
-        double doubleValue = value.doubleValue();
-        return Double.isInfinite(doubleValue) ? null : doubleValue;
     }
 
     @Override
@@ -529,12 +525,7 @@ public class StdValueInstantiator
             return super.createFromBoolean(ctxt, value);
         }
         final Boolean arg = Boolean.valueOf(value);
-        try {
-            return _fromBooleanCreator.call1(arg);
-        } catch (Exception t0) {
-            return ctxt.handleInstantiationProblem(_fromBooleanCreator.getDeclaringClass(),
-                    arg, rewrapCtorProblem(ctxt, t0));
-        }
+        return instantiate(ctxt, _fromBooleanCreator, arg);
     }
 
     /*
@@ -682,4 +673,15 @@ public class StdValueInstantiator
             throw rewrapCtorProblem(ctxt, t);
         }
     }
+    
+    private Object instantiate(DeserializationContext ctxt, AnnotatedWithParams creator, Object arg) throws IOException {
+        try {
+            return creator.call1(arg);
+        } catch (Exception t0) {
+            return ctxt.handleInstantiationProblem(creator.getDeclaringClass(),
+                    arg, rewrapCtorProblem(ctxt, t0)
+            );
+        }
+    }
+    
 }

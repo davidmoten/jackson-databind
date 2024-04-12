@@ -1,16 +1,16 @@
 package com.fasterxml.jackson.databind.deser.std;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.fasterxml.jackson.databind.testutil.DatabindTestUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -28,20 +28,6 @@ public class StdValueInstantiatorTest
         Stuff(double value) {
             this.value = value;
         }
-    }
-    
-    @Test
-    public void testDoubleValidation_valid() {
-        assertEquals(0d, StdValueInstantiator.tryConvertToDouble(BigDecimal.ZERO));
-        assertEquals(1d, StdValueInstantiator.tryConvertToDouble(BigDecimal.ONE));
-        assertEquals(10d, StdValueInstantiator.tryConvertToDouble(BigDecimal.TEN));
-        assertEquals(-1.5d, StdValueInstantiator.tryConvertToDouble(BigDecimal.valueOf(-1.5d)));
-    }
-
-    @Test
-    public void testDoubleValidation_invalid() {
-        BigDecimal value = BigDecimal.valueOf(Double.MAX_VALUE).add(BigDecimal.valueOf(Double.MAX_VALUE));
-        assertNull(StdValueInstantiator.tryConvertToDouble(value));
     }
     
     @Test
@@ -193,6 +179,34 @@ public class StdValueInstantiatorTest
         } catch (ValueInstantiationException e) {
             assertTrue(e.getCause() instanceof IllegalArgumentException);
             assertEquals("boo", e.getCause().getMessage());
+        }
+    }
+    
+    @Test
+    public void testJsonIntegerToFloat() throws Exception {
+        A3 a = MAPPER.readValue("5", A3.class);
+        assertEquals(5, a.value);
+    }
+    
+    static class A3 {
+        final double value;
+        
+        A3(float value) {
+            this.value = value;
+        }
+    }
+    
+    @Test
+    public void testJsonBigIntegerToIntIsTooLarge() throws Exception {
+        BigInteger big = new BigInteger("12345678901234567890");
+        assertThrows(MismatchedInputException.class, () -> MAPPER.readValue(big.toString(), A4.class));
+    }
+    
+    static class A4 {
+        final int value;
+        
+        A4(int value) {
+            this.value = value;
         }
     }
 }

@@ -28,10 +28,12 @@ public class CreatorCollector
     protected final static int C_DELEGATE = 8;
     protected final static int C_PROPS = 9;
     protected final static int C_ARRAY_DELEGATE = 10;
+    protected final static int C_FLOAT = 11;
 
     protected final static String[] TYPE_DESCS = new String[] { "default",
             "from-String", "from-int", "from-long", "from-big-integer", "from-double",
-            "from-big-decimal", "from-boolean", "delegate", "property-based", "array-delegate"
+            "from-big-decimal", "from-boolean", "delegate", "property-based", "array-delegate", 
+            "from-float"
     };
 
     /**
@@ -51,7 +53,7 @@ public class CreatorCollector
      *
      * @since 2.5
      */
-    protected final AnnotatedWithParams[] _creators = new AnnotatedWithParams[11];
+    protected final AnnotatedWithParams[] _creators = new AnnotatedWithParams[12];
 
     /**
      * Bitmask of creators that were explicitly marked as creators; false for
@@ -105,6 +107,7 @@ public class CreatorCollector
         inst.configureFromLongCreator(_creators[C_LONG]);
         inst.configureFromBigIntegerCreator(_creators[C_BIG_INTEGER]);
         inst.configureFromDoubleCreator(_creators[C_DOUBLE]);
+        inst.configureFromFloatCreator(_creators[C_FLOAT]);
         inst.configureFromBigDecimalCreator(_creators[C_BIG_DECIMAL]);
         inst.configureFromBooleanCreator(_creators[C_BOOLEAN]);
         return inst;
@@ -148,6 +151,10 @@ public class CreatorCollector
 
     public void addDoubleCreator(AnnotatedWithParams creator, boolean explicit) {
         verifyNonDup(creator, C_DOUBLE, explicit);
+    }
+    
+    public void addFloatCreator(AnnotatedWithParams creator, boolean explicit) {
+        verifyNonDup(creator, C_FLOAT, explicit);
     }
 
     public void addBigDecimalCreator(AnnotatedWithParams creator, boolean explicit) {
