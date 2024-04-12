@@ -357,11 +357,13 @@ public class StdValueInstantiator
     @Override
     public Object createFromInt(DeserializationContext ctxt, int value) throws IOException
     {
-        // First: "native" int methods work best:
+        // start with exact match on the creator type
+        // then continue widening the type match
+
         if (_fromIntCreator != null) {
             return instantiate(ctxt, _fromIntCreator, value);
         }
-        // but if not, can do widening conversion
+
         if (_fromLongCreator != null) {
             Long arg = Long.valueOf(value);
             return instantiate(ctxt, _fromLongCreator, arg);
@@ -407,7 +409,8 @@ public class StdValueInstantiator
             return instantiate(ctxt, _fromBigIntegerCreator, arg);
         }
         
-        // may lose precision
+        // may lose precision with the following creators
+        // we prefer creators that would lose less precision
         
         if (_fromDoubleCreator != null) {
             Double arg = Double.valueOf(value);
@@ -448,7 +451,8 @@ public class StdValueInstantiator
             }
         }
         
-        // may lose precision
+        // may lose precision with the following creators
+        // we prefer creators that would lose less precision
 
         if (_fromDoubleCreator != null) {
             double arg = value.doubleValue();
@@ -499,7 +503,8 @@ public class StdValueInstantiator
             return instantiate(ctxt, _fromBigDecimalCreator, value);
         }
 
-        // may lose precision 
+        // may lose precision with the following creators
+        // we prefer creators that would lose less precision
         
         if (_fromDoubleCreator != null) {
             double arg = value.doubleValue();
