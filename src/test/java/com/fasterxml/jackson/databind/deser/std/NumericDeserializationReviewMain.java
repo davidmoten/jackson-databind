@@ -26,6 +26,8 @@ public class NumericDeserializationReviewMain {
         String bigDecimalJson = BigDecimal.valueOf(Double.MAX_VALUE).multiply(BigDecimal.TEN).add(new BigDecimal("1.2"))
                 .toString();
 
+        List<String> names = Arrays.asList("maxByte", "smallDecimalFormInteger", "smallExponentialFormInteger", "maxShort", "maxInt", "maxLong", "bigInteger", "bigIntegerExponentialForm", "maxFloat", "maxDouble",
+                "bigDecimal");
         List<String> values = Arrays.asList(byteJson, smallDecimalFormInteger, smallExponentialFormInteger, shortJson,
                 intJson, longJson, bigIntegerJson, bigIntegerExponentialFormJson, floatJson, doubleJson,
                 bigDecimalJson);
@@ -33,17 +35,19 @@ public class NumericDeserializationReviewMain {
                 LongProperty.class, FloatProperty.class, DoubleProperty.class, BigIntegerProperty.class,
                 BigDecimalProperty.class);
 
-        for (String value : values) {
-            System.out.println("------ " + value + "-----------");
+        for (int i = 0; i < values.size(); i++) {
+            String value = values.get(i);
+            String name = names.get(i);
+            System.out.println();
+            System.out.println("------ " + name + "-----------");
+            System.out.println("  value " + value);
+            System.out.println();
             for (Class<?> cls : classes) {
                 String result;
                 String v;
                 try {
                     v = new ObjectMapper().readValue(json(value), cls).toString();
-                    if (v.endsWith(".0")) {
-                        v = v.substring(0, v.length() - 2);
-                    }
-                    if (v.equals(value)) {
+                    if (new BigDecimal(v).compareTo(new BigDecimal(value)) == 0) {
                         result = "Ok";
                     } else {
                         result = "?";
