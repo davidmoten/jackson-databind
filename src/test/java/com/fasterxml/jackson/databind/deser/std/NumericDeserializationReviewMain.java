@@ -26,7 +26,8 @@ public class NumericDeserializationReviewMain {
         String bigDecimalJson = BigDecimal.valueOf(Double.MAX_VALUE).multiply(BigDecimal.TEN).add(new BigDecimal("1.2"))
                 .toString();
 
-        List<String> names = Arrays.asList("maxByte", "smallDecimalFormInteger", "smallExponentialFormInteger", "maxShort", "maxInt", "maxLong", "bigInteger", "bigIntegerExponentialForm", "maxFloat", "maxDouble",
+        List<String> names = Arrays.asList("maxByte", "smallDecimalFormInteger", "smallExponentialFormInteger",
+                "maxShort", "maxInt", "maxLong", "bigInteger", "bigIntegerExponentialForm", "maxFloat", "maxDouble",
                 "bigDecimal");
         List<String> values = Arrays.asList(byteJson, smallDecimalFormInteger, smallExponentialFormInteger, shortJson,
                 intJson, longJson, bigIntegerJson, bigIntegerExponentialFormJson, floatJson, doubleJson,
@@ -34,9 +35,8 @@ public class NumericDeserializationReviewMain {
         List<Class<?>> classes = Arrays.asList(ByteProperty.class, ShortProperty.class, IntProperty.class,
                 LongProperty.class, FloatProperty.class, DoubleProperty.class, BigIntegerProperty.class,
                 BigDecimalProperty.class);
-        List<Class<?>> singleArgClasses = Arrays.asList(OfByte.class, OfShort.class, OfInt.class,
-                OfLong.class, OfFloat.class, OfDouble.class, OfBigInteger.class,
-                OfBigDecimal.class);
+        List<Class<?>> singleArgClasses = Arrays.asList(OfByte.class, OfShort.class, OfInt.class, OfLong.class,
+                OfFloat.class, OfDouble.class, OfBigInteger.class, OfBigDecimal.class);
 
         for (int i = 0; i < values.size(); i++) {
             String value = values.get(i);
@@ -49,7 +49,7 @@ public class NumericDeserializationReviewMain {
                 check(value, propertyJson(value), cls);
             }
         }
-        
+
         for (int i = 0; i < values.size(); i++) {
             String value = values.get(i);
             String name = names.get(i);
@@ -73,7 +73,12 @@ public class NumericDeserializationReviewMain {
             if (new BigDecimal(v).compareTo(new BigDecimal(value)) == 0) {
                 result = "Ok";
             } else {
-                result = "?";
+                BigDecimal ratio = new BigDecimal(v).divide(new BigDecimal(value));
+                if (ratio.compareTo(BigDecimal.valueOf(1.01)) < 0 && ratio.compareTo(BigDecimal.valueOf(0.99)) > 0) {
+                    result = "Prec"; // precision
+                } else {
+                    result = "?";
+                }
             }
         } catch (Throwable e) {
             v = value;
@@ -93,7 +98,7 @@ public class NumericDeserializationReviewMain {
     // integer with decimal point (100.0) not parsed by any integer type (fail)
     // decimal types go to Infinity on overflow (acceptable)
     // decimal types lose precision rather than throw (good)
-    
+
     // Conclusions for single-arg deserialization
     //
     // no support for byte, short, float (fail)
@@ -102,7 +107,8 @@ public class NumericDeserializationReviewMain {
     // 9223372036854775807 (Long.MAX_VALUE) not parsed by BigDecimal (fail)
     // 100 not parsed by BigDecimal (fail)
     // large decimal (not exponential form) not parsed by BigDecimal (fail)
-    // large decimal (not exponential form) when parsed to Double should be Infinity but throws (fail)
+    // large decimal (not exponential form) when parsed to Double should be Infinity
+    // but throws (fail)
 
     private static String propertyJson(String value) {
         return "{\"name\":\"saturn\",\"value\":\"" + value + "\"}";
@@ -227,7 +233,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfByte {
         final byte value;
 
@@ -240,7 +246,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfShort {
         final short value;
 
@@ -253,7 +259,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfInt {
         final int value;
 
@@ -266,7 +272,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfLong {
         final long value;
 
@@ -279,7 +285,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfFloat {
         final float value;
 
@@ -292,7 +298,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfDouble {
         final double value;
 
@@ -305,7 +311,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfBigInteger {
         final BigInteger value;
 
@@ -318,7 +324,7 @@ public class NumericDeserializationReviewMain {
             return String.valueOf(value);
         }
     }
-    
+
     public static final class OfBigDecimal {
         final BigDecimal value;
 
