@@ -81,7 +81,14 @@ public class NumericDeserializationReviewMain {
                 }
             }
         } catch (Throwable e) {
-            v = value;
+            if (e.getMessage().toLowerCase().contains("no creators")) {
+                v = "no creators";
+            } else if (e.getMessage().toLowerCase().contains("infinity")) {
+                v = "infinity";
+            } else {
+                v = limit(e.getMessage().replaceAll("\n.*", ""), 1000);
+            }
+
             result = "Err";
             err = e.getMessage();
         }
@@ -91,11 +98,20 @@ public class NumericDeserializationReviewMain {
         }
     }
 
+    private static String limit(String s, int limit) {
+        if (s.length() <= limit) {
+            return s;
+        } else {
+            return s.substring(0, limit);
+        }
+    }
+
     // Conclusions for property deserialization
     //
     // integer types (byte, short, int, long) give error on overflow (good)
     // integer in exponential form 1e2 not parsed by any integer type (fail)
     // integer with decimal point (100.0) not parsed by any integer type (fail)
+    // cannot parse Integer.MAX_VALUE or Long.MAX_VALUE to float (fail, should accept precision loss)
     // decimal types go to Infinity on overflow (acceptable)
     // decimal types lose precision rather than throw (good)
 
