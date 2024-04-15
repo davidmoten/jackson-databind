@@ -96,10 +96,13 @@ public class NumericDeserializationReviewMain {
     
     // Conclusions for single-arg deserialization
     //
-    // no support for byte, short, float
+    // no support for byte, short, float (fail)
     // integer in exponential form 1e2 not parsed by any integer type (fail)
     // 1e2 not parsed by BigDecimal (fail)
     // 9223372036854775807 (Long.MAX_VALUE) not parsed by BigDecimal (fail)
+    // 100 not parsed by BigDecimal (fail)
+    // large decimal (not exponential form) not parsed by BigDecimal (fail)
+    // large decimal (not exponential form) when parsed to Double should be Infinity but throws (fail)
 
     private static String propertyJson(String value) {
         return "{\"name\":\"saturn\",\"value\":\"" + value + "\"}";
