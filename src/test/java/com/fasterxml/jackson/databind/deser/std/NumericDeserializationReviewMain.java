@@ -88,7 +88,7 @@ public class NumericDeserializationReviewMain {
 
     // Conclusions for property deserialization
     //
-    // integer types give error on overflow (good)
+    // integer types (byte, short, int, long) give error on overflow (good)
     // integer in exponential form 1e2 not parsed by any integer type (fail)
     // integer with decimal point (100.0) not parsed by any integer type (fail)
     // decimal types go to Infinity on overflow (acceptable)
